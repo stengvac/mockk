@@ -2358,6 +2358,7 @@ class MockKAnswerScope<T, B>(
 
     @Suppress("UNCHECKED_CAST")
     inline fun <reified T : Any> coroutine() = lambda as CapturingSlot<T>
+    inline fun <reified T> coroutine(n: Int) = invocation.args[n] as T
 
     val nothing = null
 

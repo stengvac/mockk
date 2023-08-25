@@ -94,7 +94,20 @@ class SignatureMatcherDetector(
 
         processCompositeMatchers()
         if (matcherMap.isNotEmpty()) {
-            throw MockKException("Failed matching mocking signature for\n${callRounds[0].calls.joinToString("\n")}\nleft matchers: ${matcherMap.values}")
+            val info = try {
+                callRounds[0].calls.joinToString("\n") to null
+            } catch (e: Throwable) {
+                // sometimes coroutines toString throw error and reasonable message is not created
+                if (e::class.qualifiedName != "kotlin.reflect.jvm.internal.KotlinReflectionInternalError") {
+                    throw e
+                }
+                """
+                    Kotlin coroutine toString() threw an exception.
+                    Probably mismatch in signature. For example `any<() -> T>()` should be `any<suspend () -> T>`
+                    See cause.
+                 """.trimIndent() to e
+            }
+            throw MockKException("Failed matching mocking signature for\n${info.first}\nleft matchers: ${matcherMap.values}", info.second)
         }
     }
 }
